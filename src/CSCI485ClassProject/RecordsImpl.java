@@ -4,8 +4,10 @@ import CSCI485ClassProject.fdb.FDBHelper;
 import CSCI485ClassProject.fdb.FDBKVPair;
 import CSCI485ClassProject.models.AttributeType;
 import CSCI485ClassProject.models.ComparisonOperator;
+import CSCI485ClassProject.models.IndexType;
 import CSCI485ClassProject.models.Record;
 import CSCI485ClassProject.models.TableMetadata;
+import CSCI485ClassProject.utils.IndexesUtils;
 import com.apple.foundationdb.Database;
 import com.apple.foundationdb.Transaction;
 import com.apple.foundationdb.directory.DirectorySubspace;
@@ -17,6 +19,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class RecordsImpl implements Records{
@@ -127,6 +130,25 @@ public class RecordsImpl implements Records{
       FDBHelper.setFDBKVPair(tableSchemaDirectory, tx, kv);
     }
 
+
+
+    // update indexes
+    List<Object> primaryKeyVals = primKeyTuple.getItems();
+    HashMap<String, DirectorySubspace> indexSubspaces = IndexesUtils.openIndexSubspacesOfTable(tx, tableName, tblMetadata);
+    for (Map.Entry<String, DirectorySubspace> attrIdx : indexSubspaces.entrySet()) {
+      String attrName = attrIdx.getKey();
+      Object attrVal = record.getValueForGivenAttrName(attrName);
+
+      DirectorySubspace idxSpace = attrIdx.getValue();
+
+      IndexType idxType = IndexesUtils.getIndexTypeOfTableAttribute(tx, idxSpace);
+
+      IndexTransformer indexTransformer = new IndexTransformer(tableName, attrName, idxType);
+      FDBKVPair idxPair = indexTransformer.convertToIndexKVPair(idxType, attrVal, primaryKeyVals);
+
+      FDBHelper.setFDBKVPair(idxSpace, tx, idxPair);
+    }
+
     FDBHelper.commitTransaction(tx);
     return StatusCode.SUCCESS;
   }
@@ -163,15 +185,29 @@ public class RecordsImpl implements Records{
       return null;
     }
 
-    Cursor cursor = new Cursor(mode, tableName, tblMetadata, tx);
+    if (isUsingIndex) {
+      if (!IndexesUtils.doesIndexExistOnTableAttribute(tx, tableName, attrName)) {
+        FDBHelper.abortTransaction(tx);
+        return null;
+      }
+    }
+
     Record.Value attrVal = new Record.Value();
     StatusCode initVal = attrVal.setValue(attrValue);
     if (initVal != StatusCode.SUCCESS) {
-      // check if the new value's type matches the table schema
+      // check if the value's type matches the table schema
       FDBHelper.abortTransaction(tx);
       return null;
     }
-    cursor.enablePredicate(attrName, attrVal, operator);
+
+    Cursor cursor;
+    if (isUsingIndex) {
+      IndexType idxType = IndexesUtils.getIndexTypeOfTableAttribute(tx, tableName, attrName);
+      cursor = new Cursor(tableName, tblMetadata, attrName, operator, attrVal, idxType, tx);
+    } else {
+      cursor = new Cursor(mode, tableName, tblMetadata, tx);
+      cursor.enablePredicate(attrName, attrVal, operator);
+    }
     return cursor;
   }
 

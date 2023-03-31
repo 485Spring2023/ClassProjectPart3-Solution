@@ -184,9 +184,9 @@ public class Cursor {
 
     // construct the prefix query tuple
     if (indexType == IndexType.NON_CLUSTERED_B_PLUS_TREE_INDEX) {
-      indexPrefixQueryTuple = NonClusteredBPTreeIndexRecord.getKeyPrefixTuple(predicateAttributeValue);
+      indexPrefixQueryTuple = NonClusteredBPTreeIndexRecord.getKeyPrefixTuple(predicateAttributeValue.getValue());
     } else if (indexType == IndexType.NON_CLUSTERED_HASH_INDEX) {
-      indexPrefixQueryTuple = NonClusteredHashIndexRecord.getKeyPrefixTuple(predicateAttributeValue);
+      indexPrefixQueryTuple = NonClusteredHashIndexRecord.getKeyPrefixTuple(predicateAttributeValue.getValue());
     }
 
     if (indexType == IndexType.NON_CLUSTERED_HASH_INDEX) {

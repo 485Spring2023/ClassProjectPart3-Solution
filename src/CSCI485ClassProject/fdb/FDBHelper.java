@@ -62,6 +62,8 @@ public class FDBHelper {
 
   public static AsyncIterable<KeyValue> getKVPairIterableStartWithPrefixInDirectory(DirectorySubspace dir, Transaction tx, Tuple prefixTuple, boolean isReverse) {
     Range dirRange = dir.range();
+
+//    KeyValue kv = getKVPairIterableWithPrefixInDirectory(dir, tx, prefixTuple, false).iterator().next();
     KeySelector beginKeySelector = KeySelector.firstGreaterOrEqual(dir.pack(prefixTuple));
     Range range = new Range(beginKeySelector.getKey(), dirRange.end);
     return tx.getRange(range, ReadTransaction.ROW_LIMIT_UNLIMITED, isReverse);

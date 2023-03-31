@@ -24,7 +24,7 @@ public class NonClusteredHashIndexRecord implements IndexRecord{
     this.attrVal = keyTuple.get(0); // the hash val of the attribute
     this.pkValues = new ArrayList<>();
     for (int i = 1; i < keyTuple.size(); i++) {
-      this.pkValues.add(pkValues.get(i));
+      this.pkValues.add(keyTuple.get(i));
     }
   }
 

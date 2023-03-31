@@ -2,6 +2,7 @@ package CSCI485ClassProject.utils;
 
 import CSCI485ClassProject.DBConf;
 import CSCI485ClassProject.fdb.FDBHelper;
+import CSCI485ClassProject.models.IndexType;
 import CSCI485ClassProject.models.TableMetadata;
 import com.apple.foundationdb.Transaction;
 import com.apple.foundationdb.directory.DirectorySubspace;
@@ -23,6 +24,26 @@ public class IndexesUtils {
 
   public static boolean doesIndexExistOnTableAttribute(Transaction tx, String tableName, String attrName) {
     return FDBHelper.doesSubdirectoryExists(tx, getAttributeIndexDirPath(tableName, attrName));
+  }
+
+  public static IndexType getIndexTypeOfTableAttribute(Transaction tx, String tableName, String attrName) {
+    List<String> dirPath = new ArrayList<>();
+    dirPath.add(tableName);
+    dirPath.add(DBConf.TABLE_INDEXES_STORE);
+    dirPath.add(attrName);
+
+    List<String> indexDirs = FDBHelper.getAllDirectSubspacesNameUnderGivenPath(tx, dirPath);
+    String indexTypeName = indexDirs.get(0);
+    IndexType idxType = IndexType.valueOf(indexTypeName);
+
+    return idxType;
+  }
+
+  public static IndexType getIndexTypeOfTableAttribute(Transaction tx, DirectorySubspace idxSpace) {
+    List<String> indexDirs = idxSpace.getPath();
+    String indexTypeName = indexDirs.get(indexDirs.size()-1);
+    IndexType idxType = IndexType.valueOf(indexTypeName);
+    return idxType;
   }
 
   public static HashMap<String, DirectorySubspace> openIndexSubspacesOfTable(Transaction tx, String tableName, TableMetadata tblMetadata) {

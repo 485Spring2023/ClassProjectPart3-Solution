@@ -71,7 +71,7 @@ public class IndexesImpl implements Indexes{
         isCursorInitialized = true;
         record = records.getFirst(scanCursor);
       } else {
-        record = records.getLast(scanCursor);
+        record = records.getNext(scanCursor);
       }
       if (record == null) {
         break;
@@ -91,7 +91,7 @@ public class IndexesImpl implements Indexes{
 
     // commit changes
     FDBHelper.commitTransaction(tx);
-    return null;
+    return StatusCode.SUCCESS;
   }
 
   @Override
