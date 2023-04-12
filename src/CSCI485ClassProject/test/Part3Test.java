@@ -175,10 +175,10 @@ public class Part3Test {
   @Test
   public void unitTest2() {
     assertEquals(StatusCode.SUCCESS, indexes.createIndex(EmployeeTableName, Salary, IndexType.NON_CLUSTERED_B_PLUS_TREE_INDEX));
-    Cursor cursor = records.openCursor(EmployeeTableName, Salary, 50, ComparisonOperator.GREATER_THAN_OR_EQUAL_TO, Cursor.Mode.READ, true);
+    Cursor cursor = records.openCursor(EmployeeTableName, Salary, 75, ComparisonOperator.LESS_THAN, Cursor.Mode.READ, true);
 
     boolean isCursorInitialized = false;
-    for (int i = 50; i < initialNumberOfRecords; i++) {
+    for (int i = 0; i < 75; i++) {
       Record record;
       if (!isCursorInitialized) {
         record = records.getFirst(cursor);
@@ -335,8 +335,8 @@ public class Part3Test {
     assertEquals(StatusCode.SUCCESS, records.commitCursor(cursor));
     isCursorInitialized = false;
 
-    cursor = records.openCursor(EmployeeTableName, Cursor.Mode.READ);
-    for (int i = 0; i < initialNumberOfRecords + updatedNumberOfRecords; i++) {
+    cursor = records.openCursor(EmployeeTableName, Salary, 0, ComparisonOperator.GREATER_THAN, Cursor.Mode.READ, true);
+    for (int i = 1; i < initialNumberOfRecords + updatedNumberOfRecords; i++) {
       Record record;
       if (!isCursorInitialized) {
         record = records.getFirst(cursor);
@@ -359,8 +359,8 @@ public class Part3Test {
 
     tableManager.dropAllTables();
 
-    int numOfRecords = 1000;
-    int numOfQueries = 100;
+    int numOfRecords = 1000000;
+    int numOfQueries = 10000;
 
     String INT0 = "INT0";
     String INT1 = "INT1";

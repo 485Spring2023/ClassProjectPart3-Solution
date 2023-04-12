@@ -64,7 +64,6 @@ public class Cursor {
   private boolean isUsingIndex = false;
   private String indexedAttrName;
   private DirectorySubspace indexRecordSubspace;
-  private IndexTransformer indexTransformer;
   private AsyncIterator<KeyValue> indexIterator = null;
   private Tuple indexPrefixQueryTuple;
   private IndexType indexType;
@@ -162,7 +161,7 @@ public class Cursor {
     this.isPredicateEnabled = true;
   }
 
-  private void enableIndexMaintainance() {
+  private void enableIndexMaintenance() {
     this.attrNameToIndexSubspace = IndexesUtils.openIndexSubspacesOfTable(tx, tableName, tableMetadata);
     this.attrNameToIndexType = new HashMap<>();
     for (Map.Entry<String, DirectorySubspace> entry : attrNameToIndexSubspace.entrySet()) {
@@ -175,11 +174,11 @@ public class Cursor {
     }
   }
 
-  private void enableQueryIndex() {
+  private void enableQueryUsingIndex() {
     if (!isUsingIndex) {
       return;
     }
-    indexTransformer = new IndexTransformer(tableName, indexedAttrName, indexType);
+    IndexTransformer indexTransformer = new IndexTransformer(tableName, indexedAttrName, indexType);
     indexRecordSubspace = FDBHelper.openSubspace(tx, indexTransformer.getIndexStorePath());
 
     // construct the prefix query tuple
@@ -202,8 +201,7 @@ public class Cursor {
       isIndexUsable = true;
       if (predicateOperator == ComparisonOperator.EQUAL_TO) {
         indexIterator = FDBHelper.getKVPairIterableWithPrefixInDirectory(indexRecordSubspace, tx, indexPrefixQueryTuple, isInitializedToLast).iterator();
-      }
-      else if (predicateOperator == ComparisonOperator.LESS_THAN) {
+      } else if (predicateOperator == ComparisonOperator.LESS_THAN) {
         // e.g. Salary < 50
         indexIterator = FDBHelper.getKVPairIterableEndBeforePrefixInDirectory(indexRecordSubspace, tx, indexPrefixQueryTuple, isInitializedToLast).iterator();
       } else if (predicateOperator == ComparisonOperator.GREATER_THAN_OR_EQUAL_TO){
@@ -297,12 +295,12 @@ public class Cursor {
 
       // init the index if needed
       if (isUsingIndex) {
-        enableQueryIndex();
+        enableQueryUsingIndex();
       }
       isInitialized = true;
 
       if (mode == Mode.READ_WRITE) {
-        enableIndexMaintainance();
+        enableIndexMaintenance();
       }
     }
     // reset the currentRecord

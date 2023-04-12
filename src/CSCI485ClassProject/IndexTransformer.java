@@ -5,6 +5,7 @@ import CSCI485ClassProject.models.IndexRecord;
 import CSCI485ClassProject.models.IndexType;
 import CSCI485ClassProject.models.NonClusteredBPTreeIndexRecord;
 import CSCI485ClassProject.models.NonClusteredHashIndexRecord;
+import CSCI485ClassProject.utils.IndexesUtils;
 import com.apple.foundationdb.tuple.Tuple;
 
 import java.util.ArrayList;
@@ -17,10 +18,7 @@ public class IndexTransformer {
 
   public IndexTransformer(String tableName, String attrName, IndexType indexType) {
     indexStore = new ArrayList<>();
-
-    indexStore.add(tableName);
-    indexStore.add(DBConf.TABLE_INDEXES_STORE);
-    indexStore.add(attrName);
+    indexStore = IndexesUtils.getAttributeIndexDirPath(tableName, attrName);
     indexStore.add(indexType.name());
   }
 
